@@ -249,3 +249,6 @@ void mostrarHistorial (Paciente * p) {
              << p->historial[i].diagnostico << "\n";
     }
 }
+
+void listarCitasPendientes (Hospital * h) {
+}
