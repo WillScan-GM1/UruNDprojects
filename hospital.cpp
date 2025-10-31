@@ -128,3 +128,124 @@ Hospital * crearHospital(const chr * nombre ){
 
     return h;
 }
+
+void destruirHospital(Hospital * h) {
+    if (h->cantPacientes >= h->maxPacientes){
+        redimensionarPacientes (h);
+    }
+
+    Paciente p ;
+    p. id = h->sigIdPaciente ++;
+    cout << "Nombre: " ; cin >> p.nombre ;
+    cout << "Cedula: " ; cin >> p.cedula ;
+    cout << "Edad: " ; cin >> p.edad;
+    p.activo = true;
+    p.numConsultas = 0;
+    p.capacidadHistorial = 5;
+    p.historial = new HistorialMedico [5];
+
+    h->pacientes [h->cantPacientes ] = p;
+    h->cantPacientes ++;
+    cout << "? Paciente registrado con ID: " << p.id << "\n";
+}
+
+void agendarCita(Hospital* h) {
+    if (h->cantCitas >= h->maxCitas) {
+        redimensionarCitas(h);
+    }
+    int idP, idD;
+    cout << "ID Paciente: "; cin >> idP;
+    cout << "ID Doctor: "; cin >> idD;
+    
+    Paciente* p = buscarPacientePorId(h, idP);
+    Doctor* d = buscarDoctorPorId(h, idD);
+    if (!p || !d) {
+        cout << "? Paciente o doctor no encontrado.\n";
+        return;
+    }
+    
+    Cita c;
+    c.id = h->sigIdCita++;
+    c.idPaciente = idP;
+    c.idDoctor = idD;
+    cout << "Fecha (YYYY-MM-DD): "; cin >> c.fecha;
+    cout << "Hora (HH:MM): "; cin >> c.hora;
+    strcpy(c.estado, "Agendada");
+    c.atendida = false;
+    
+    h->citas[h->cantCitas] = c;
+    h->cantCitas++;
+    cout << "? Cita agendada con ID: " << c.id << "\n";
+}
+
+void atenderCita(Hospital* h) {
+    int id;
+    cout << "ID de la cita a atender: "; cin >> id;
+    
+    for (int i = 0; i < h->cantCitas; i++) {
+        if (h->citas[i].id == id && strcmp(h->citas[i].estado, "Agendada") == 0) {
+            Cita* c = &h->citas[i];
+            Paciente* p = buscarPacientePorId(h, c->idPaciente);
+            Doctor* d = buscarDoctorPorId(h, c->idDoctor);
+            
+            if (!p || !d) {
+                cout << "? Error al cargar datos.\n";
+                return;
+            }
+            
+            if (p->numConsultas >= p->capacidadHistorial) {
+                redimensionarHistorial(p);
+            }
+            
+            HistorialMedico hist;
+            hist.id = h->sigIdConsulta++;
+            strcpy(hist.fecha, c->fecha);
+            cout << "Diagnostico: "; cin >> hist.diagnostico;
+            cout << "Tratamiento: "; cin >> hist.tratamiento;
+            hist.idDoctor = d->id;
+            hist.costo = d->costoConsulta;
+            
+            p->historial[p->numConsultas] = hist;
+            p->numConsultas++;
+            
+            strcpy(c->estado, "Atendida");
+            c->atendida = true;
+            cout << "? Cita atendida y registrada en historial.\n";
+            return;
+        }
+    }
+    cout << "? Cita no encontrada o ya atendida.\n";
+}
+
+Paciente * buscarPacientePorId (Hospital * h, int id) {
+    for (int i = 0; i < h->cantPacientes; i++) {
+        if (h->pacientes [i].id == id){
+            return &h->pacientes [i];
+        }
+    }
+    return nullptr ;
+}
+
+Doctor * buscarDoctorPorId (Hospital * h, int id) {
+    for (int i = 0; i < h->cantDoctores; i++) {
+        if (h->doctores [i].id == id){
+            return &h->doctores [i];
+        }
+    }
+    return nullptr ;
+}
+
+void mostrarHistorial (Paciente * p) {
+    if (p->numConsultas == 0) {
+        cout << " No hay historial medico.\n";
+        return;
+    }
+    cout << "\n?? HISTORIAL DE " << p->nombre << ":\n";
+    cout << "ID | Fecha       | Diagnostico\n";
+    cout << "-------------------------------\n";
+    for (int i = 0; i < p->numConsultas; i++) {
+        cout << p->historial[i].id << "  | "
+             << p->historial[i].fecha << " | "
+             << p->historial[i].diagnostico << "\n";
+    }
+}
